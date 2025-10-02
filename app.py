@@ -42,24 +42,24 @@ st.markdown("""
         body {
             background-color: #f7f9fc;
         }
-        .summary-card, .answer-card {
+        .card-custom {
             background: white;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 20px;
             margin: 15px 0;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .summary-card h4, .answer-card h4 {
-            color: #4CAF50;
+        .card-custom h4 {
+            color: #007bff;
         }
         .stDownloadButton > button {
-            background-color: #4CAF50;
+            background-color: #007bff;
             color: white !important;
             border-radius: 8px;
             font-weight: bold;
         }
         .stDownloadButton > button:hover {
-            background-color: #45a049;
+            background-color: #0056b3;
             color: white !important;
         }
         .stSidebar {
@@ -109,41 +109,42 @@ if uploaded_files:
             summaries.append(summary)
         final_summary = " ".join(summaries)
 
-        # --- Display sections ---
-        with st.expander("📖 Full Extracted Text", expanded=False):
-            st.write(text)
+        # --- Layout with Bootstrap grid ---
+        st.markdown("<div class='container'>", unsafe_allow_html=True)
+        st.markdown("<div class='row'>", unsafe_allow_html=True)
 
-        # Summary card
-        st.markdown("<div class='summary-card'><h4>✨ Summary</h4>", unsafe_allow_html=True)
+        # Column 1: Summary
+        st.markdown("<div class='col-md-8'>", unsafe_allow_html=True)
+        st.markdown("<div class='card-custom'><h4>✨ Summary</h4>", unsafe_allow_html=True)
         st.write(final_summary)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # Download summary
         st.download_button(
             label="💾 Download Summary",
             data=final_summary,
             file_name=f"{uploaded_file.name}_summary.txt",
             mime="text/plain"
         )
+        st.markdown("</div></div>", unsafe_allow_html=True)
 
-        # Extra analysis
-        with st.expander("📊 Document Analysis"):
-            st.write(f"**Word count:** {len(text.split())}")
-            keywords = extract_keywords(text)
-            st.write("**Top Keywords:**", ", ".join(keywords))
+        # Column 2: Analysis
+        st.markdown("<div class='col-md-4'>", unsafe_allow_html=True)
+        st.markdown("<div class='card-custom'><h4>📊 Document Analysis</h4>", unsafe_allow_html=True)
+        st.write(f"**Word count:** {len(text.split())}")
+        keywords = extract_keywords(text)
+        st.write("**Top Keywords:**", ", ".join(keywords))
+        st.markdown("</div></div>", unsafe_allow_html=True)
+
+        st.markdown("</div></div>", unsafe_allow_html=True)
 
         # --- Q&A Section ---
-        st.subheader("❓ Ask Questions About This PDF")
+        st.markdown("<div class='card-custom'><h4>❓ Ask Questions About This PDF</h4>", unsafe_allow_html=True)
         user_question = st.text_input(f"Type your question about **{uploaded_file.name}**:")
 
         if user_question:
             with st.spinner("🤔 AI is thinking..."):
                 try:
                     answer = qa_pipeline(question=user_question, context=text[:3000])  # limit context
-                    st.markdown("<div class='answer-card'><h4>🤖 Answer</h4>", unsafe_allow_html=True)
-                    st.info(answer['answer'])
-                    st.markdown("</div>", unsafe_allow_html=True)
-                except Exception as e:
+                    st.success(f"**Answer:** {answer['answer']}")
+                except Exception:
                     st.error("⚠️ Sorry, couldn't process your question.")
 
             # Download Q&A
@@ -153,5 +154,11 @@ if uploaded_files:
                 file_name=f"{uploaded_file.name}_QA.txt",
                 mime="text/plain"
             )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Optional: full extracted text in expander
+        with st.expander("📖 Full Extracted Text"):
+            st.write(text)
+
 
 
