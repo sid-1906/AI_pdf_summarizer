@@ -35,16 +35,50 @@ def extract_keywords(text, num_keywords=10):
 # --- UI Config ---
 st.set_page_config(page_title="AI PDF Assistant", page_icon="🤖", layout="wide")
 
+# Inject Bootstrap + Custom CSS
+st.markdown("""
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f7f9fc;
+        }
+        .summary-card, .answer-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .summary-card h4, .answer-card h4 {
+            color: #4CAF50;
+        }
+        .stDownloadButton > button {
+            background-color: #4CAF50;
+            color: white !important;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .stDownloadButton > button:hover {
+            background-color: #45a049;
+            color: white !important;
+        }
+        .stSidebar {
+            background-color: #e9f5f0;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # Title
 st.markdown(
-    "<h1 style='text-align: center; color: #4CAF50;'>📄 AI PDF Assistant</h1>",
+    "<h1 class='text-center text-primary'>📄 AI PDF Assistant</h1>",
     unsafe_allow_html=True,
 )
 st.markdown(
-    "<p style='text-align: center; font-size:18px;'>Upload your PDFs and let AI summarize, analyze, and answer your questions ✨</p>",
+    "<p class='text-center lead'>Upload your PDFs and let AI summarize, analyze, and answer your questions ✨</p>",
     unsafe_allow_html=True,
 )
 
+# Sidebar settings
 with st.sidebar:
     st.header("⚙️ Settings")
     summary_length = st.radio("📏 Summary Length:", ["Short", "Medium", "Detailed"])
@@ -58,6 +92,7 @@ with st.sidebar:
     st.markdown("---")
     st.info("💡 Tip: You can upload multiple PDFs at once.")
 
+# File uploader
 uploaded_files = st.file_uploader("📂 Upload PDF(s)", type="pdf", accept_multiple_files=True)
 
 if uploaded_files:
@@ -78,8 +113,10 @@ if uploaded_files:
         with st.expander("📖 Full Extracted Text", expanded=False):
             st.write(text)
 
-        st.subheader("✨ Summary")
-        st.success(final_summary)
+        # Summary card
+        st.markdown("<div class='summary-card'><h4>✨ Summary</h4>", unsafe_allow_html=True)
+        st.write(final_summary)
+        st.markdown("</div>", unsafe_allow_html=True)
 
         # Download summary
         st.download_button(
@@ -103,7 +140,9 @@ if uploaded_files:
             with st.spinner("🤔 AI is thinking..."):
                 try:
                     answer = qa_pipeline(question=user_question, context=text[:3000])  # limit context
-                    st.info(f"**Answer:** {answer['answer']}")
+                    st.markdown("<div class='answer-card'><h4>🤖 Answer</h4>", unsafe_allow_html=True)
+                    st.info(answer['answer'])
+                    st.markdown("</div>", unsafe_allow_html=True)
                 except Exception as e:
                     st.error("⚠️ Sorry, couldn't process your question.")
 
