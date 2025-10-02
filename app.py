@@ -5,11 +5,11 @@ import fitz  # PyMuPDF
 import re
 from collections import Counter
 
-# Fix for Streamlit config permission issues
+# --- Fix for Streamlit config permission issues ---
 os.environ["STREAMLIT_CONFIG_DIR"] = os.path.join(os.getcwd(), ".streamlit")
 os.makedirs(os.environ["STREAMLIT_CONFIG_DIR"], exist_ok=True)
 
-# Load models
+# --- Load models ---
 @st.cache_resource
 def load_models():
     summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
@@ -18,7 +18,7 @@ def load_models():
 
 summarizer, qa_pipeline = load_models()
 
-# PDF text extraction
+# --- PDF text extraction ---
 def extract_text_from_pdf(uploaded_file):
     doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
     text = ""
@@ -26,18 +26,17 @@ def extract_text_from_pdf(uploaded_file):
         text += page.get_text("text")
     return text
 
-# Keyword extractor
+# --- Keyword extraction ---
 def extract_keywords(text, num_keywords=10):
     words = re.findall(r'\b\w+\b', text.lower())
     common = Counter(words).most_common(num_keywords)
     return [word for word, _ in common if len(word) > 3]
 
-# --- UI Config ---
+# --- Page config ---
 st.set_page_config(page_title="AI PDF Assistant", page_icon="🤖", layout="wide")
 
-# Inject Bootstrap + Custom CSS
+# --- Custom CSS for cards/buttons ---
 st.markdown("""
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             background-color: #f7f9fc;
@@ -68,7 +67,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Title
+# --- Title ---
 st.markdown(
     "<h1 class='text-center text-primary'>📄 AI PDF Assistant</h1>",
     unsafe_allow_html=True,
@@ -78,7 +77,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Sidebar settings
+# --- Sidebar settings ---
 with st.sidebar:
     st.header("⚙️ Settings")
     summary_length = st.radio("📏 Summary Length:", ["Short", "Medium", "Detailed"])
@@ -88,11 +87,10 @@ with st.sidebar:
         min_len, max_len = 50, 150
     else:
         min_len, max_len = 80, 250
-
     st.markdown("---")
     st.info("💡 Tip: You can upload multiple PDFs at once.")
 
-# File uploader
+# --- File uploader ---
 uploaded_files = st.file_uploader("📂 Upload PDF(s)", type="pdf", accept_multiple_files=True)
 
 if uploaded_files:
@@ -101,7 +99,7 @@ if uploaded_files:
         with st.spinner("📑 Extracting text..."):
             text = extract_text_from_pdf(uploaded_file)
 
-        # Split into chunks for summarization
+        # --- Summarization ---
         chunks = [text[i:i+1000] for i in range(0, len(text), 1000)]
         summaries = []
         for chunk in chunks:
@@ -109,31 +107,26 @@ if uploaded_files:
             summaries.append(summary)
         final_summary = " ".join(summaries)
 
-        # --- Layout with Bootstrap grid ---
-        st.markdown("<div class='container'>", unsafe_allow_html=True)
-        st.markdown("<div class='row'>", unsafe_allow_html=True)
+        # --- Two-column dashboard layout ---
+        col1, col2 = st.columns([2, 1])  # left 2x wider
 
-        # Column 1: Summary
-        st.markdown("<div class='col-md-8'>", unsafe_allow_html=True)
-        st.markdown("<div class='card-custom'><h4>✨ Summary</h4>", unsafe_allow_html=True)
-        st.write(final_summary)
-        st.download_button(
-            label="💾 Download Summary",
-            data=final_summary,
-            file_name=f"{uploaded_file.name}_summary.txt",
-            mime="text/plain"
-        )
-        st.markdown("</div></div>", unsafe_allow_html=True)
+        with col1:
+            st.markdown("<div class='card-custom'><h4>✨ Summary</h4>", unsafe_allow_html=True)
+            st.write(final_summary)
+            st.download_button(
+                label="💾 Download Summary",
+                data=final_summary,
+                file_name=f"{uploaded_file.name}_summary.txt",
+                mime="text/plain"
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
 
-        # Column 2: Analysis
-        st.markdown("<div class='col-md-4'>", unsafe_allow_html=True)
-        st.markdown("<div class='card-custom'><h4>📊 Document Analysis</h4>", unsafe_allow_html=True)
-        st.write(f"**Word count:** {len(text.split())}")
-        keywords = extract_keywords(text)
-        st.write("**Top Keywords:**", ", ".join(keywords))
-        st.markdown("</div></div>", unsafe_allow_html=True)
-
-        st.markdown("</div></div>", unsafe_allow_html=True)
+        with col2:
+            st.markdown("<div class='card-custom'><h4>📊 Document Analysis</h4>", unsafe_allow_html=True)
+            st.write(f"**Word count:** {len(text.split())}")
+            keywords = extract_keywords(text)
+            st.write("**Top Keywords:**", ", ".join(keywords))
+            st.markdown("</div>", unsafe_allow_html=True)
 
         # --- Q&A Section ---
         st.markdown("<div class='card-custom'><h4>❓ Ask Questions About This PDF</h4>", unsafe_allow_html=True)
@@ -147,7 +140,6 @@ if uploaded_files:
                 except Exception:
                     st.error("⚠️ Sorry, couldn't process your question.")
 
-            # Download Q&A
             st.download_button(
                 label="💾 Download Q&A",
                 data=f"Q: {user_question}\nA: {answer['answer']}",
@@ -156,9 +148,6 @@ if uploaded_files:
             )
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # Optional: full extracted text in expander
+        # --- Full extracted text ---
         with st.expander("📖 Full Extracted Text"):
             st.write(text)
-
-
-
