@@ -35,12 +35,17 @@ def extract_keywords(text, num_keywords=10):
 # --- UI Config ---
 st.set_page_config(page_title="AI PDF Assistant", page_icon="🤖", layout="wide")
 
-st.image("https://i.imgur.com/ktJ4fDQ.png", use_column_width=True)  # Decorative banner
-st.title("📄 AI PDF Assistant")
-st.write("Upload your PDFs and let AI **summarize, analyze, and answer your questions!** ✨")
+# Title
+st.markdown(
+    "<h1 style='text-align: center; color: #4CAF50;'>📄 AI PDF Assistant</h1>",
+    unsafe_allow_html=True,
+)
+st.markdown(
+    "<p style='text-align: center; font-size:18px;'>Upload your PDFs and let AI summarize, analyze, and answer your questions ✨</p>",
+    unsafe_allow_html=True,
+)
 
 with st.sidebar:
-    st.image("https://i.imgur.com/uQ9qYxF.png", width=180)  # Side image
     st.header("⚙️ Settings")
     summary_length = st.radio("📏 Summary Length:", ["Short", "Medium", "Detailed"])
     if summary_length == "Short":
@@ -109,4 +114,5 @@ if uploaded_files:
                 file_name=f"{uploaded_file.name}_QA.txt",
                 mime="text/plain"
             )
+
 
